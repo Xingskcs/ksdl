@@ -9,7 +9,7 @@ import pod_function
 
 # Global variables
 total_steps = 100000 # the number of training steps
-qos_time = 2000 # the qos is 2000 seconds
+qos_time = 6000 # the qos is 2000 seconds
 min_predict_step = 200 # predict after completing min_predict_step mini batches.
 worker_number = 1
 scale_time = 0

@@ -20,7 +20,7 @@ def read_global_step(api_instance, namespace, pod_name):
         # Return traning global step
         if api_response.find('Global step') == -1:
             return -1
-        return int(api_response.split(",")[0].split(" ")[2][:-1])
+        return int(api_response.split(" ")[2])
     except:
         pass
 

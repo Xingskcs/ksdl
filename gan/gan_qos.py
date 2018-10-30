@@ -9,7 +9,7 @@ import pod_function
 
 # Global variables
 total_steps = 500000
-qos_time = 3000
+qos_time = 8000
 min_predict_step = 200
 worker_number = 1
 scale_time = 0
