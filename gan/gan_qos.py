@@ -37,7 +37,7 @@ def delete_job():
 def scale_worker():
     """Scale workers"""
     global worker_number
-    change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
+    change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-gan.jinja".format(
         number1=worker_number, number2=worker_number*2)
     worker_number = worker_number*2
     os.system(change_worker_cmd)
