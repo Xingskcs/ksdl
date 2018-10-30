@@ -9,8 +9,8 @@ import pod_function
 
 # Global variables
 total_steps = 10000 # the number of training steps
-qos_time = 1000 # the qos is 1000 seconds
-min_predict_step = 10 # predict after completing min_predict_step mini batches.
+qos_time = 2000 # the qos is 2000 seconds
+min_predict_step = 100 # predict after completing min_predict_step mini batches.
 worker_number = 1
 scale_time = 0
 
@@ -50,24 +50,28 @@ def main():
     pod_name = "lstm-worker-0"
     forecast_reach_qos = False
     # Submit a lstm job
-    submit_job
+    submit_job()
     # Record the submit time
     job_submit_time = time.time()
     while not forecast_reach_qos:
         # Read global step
         global_step = 0
         used_time = 0
-        try:
-            while True:
+        while True:
+            try:
                 global_step = pod_function.read_global_step(api_instance, namespace, pod_name)
+                print(global_step)
                 if global_step != -1 and global_step >= min_predict_step:
                     used_time = time.time() - scale_time
                     break
-        except:
-            # Cannot read global step when init.
-            pass
+            except:
+                # Cannot read global step when init.
+                pass
+            time.sleep(1)
         # Predict job completion time.
         forecast_complete_time = scale_time + (used_time/global_step)*total_steps
+        print("Prediction completion time: " + str(forecast_complete_time))
+        print("QoS time: " + str(job_submit_time + qos_time))
         if forecast_complete_time <= job_submit_time + qos_time:
             forecast_reach_qos = True
         else:
@@ -79,4 +83,4 @@ def main():
 
 
 if __name__ == "__main__":
-    scale_worker()
+    main()
