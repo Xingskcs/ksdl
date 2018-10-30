@@ -8,9 +8,9 @@ from kubernetes.client.rest import ApiException
 import pod_function
 
 # Global variables
-total_steps = 100000 # the number of training steps
-qos_time = 2000 # the qos is 2000 seconds
-min_predict_step = 200 # predict after completing min_predict_step mini batches.
+total_steps = 500000
+qos_time = 3000
+min_predict_step = 200
 worker_number = 1
 scale_time = 0
 
@@ -24,18 +24,18 @@ api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(configura
 
 def submit_job():
     """Submit job."""
-    os.system("python render_template.py distributed-lstm.jinja | kubectl create -f - -n distributed-lstm")
+    os.system("python render_template.py distributed-gan.jinja | kubectl create -f - -n distributed-gan")
     global scale_time
     scale_time = time.time()
 
 
 def delete_job():
     """Delete job."""
-    os.system("python render_template.py distributed-lstm.jinja | kubectl delete -f - -n distributed-lstm")
+    os.system("python render_template.py distributed-gan.jinja | kubectl delete -f - -n distributed-gan")
 
 
 def scale_worker():
-    """Scale workers."""
+    """Scale workers"""
     global worker_number
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
         number1=worker_number, number2=worker_number*2)
@@ -45,12 +45,12 @@ def scale_worker():
 
 
 def main():
-    """According to the log of the pod, predict the completion time of 
+    """According to the log of the pod, predict the completion time of
     the job, compare it with qos, and scale the number of pods horizontally."""
-    namespace = "distributed-lstm"
-    pod_name = "lstm-worker-0"
+    namespace = "distributed-gan"
+    pod_name = "gan-worker-0"
     forecast_reach_qos = False
-    # Submit a lstm job
+    # Submit a gan job
     submit_job()
     # Record the submit time
     job_submit_time = time.time()
