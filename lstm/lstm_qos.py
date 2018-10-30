@@ -75,7 +75,7 @@ def main():
             delete_job()
             # Scale the workers
             scale_worker()
-    pod_function.wait_job_finish(namespace, pod_name, job_submit_time)
+    pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
 
 
 if __name__ == "__main__":
