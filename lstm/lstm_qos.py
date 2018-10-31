@@ -9,7 +9,6 @@ import pod_function
 
 # Global variables
 total_steps = 100000 # the number of training steps
-qos_time = 6000 # the qos is 2000 seconds
 min_predict_step = 200 # predict after completing min_predict_step mini batches.
 worker_number = 1
 scale_time = 0
@@ -46,7 +45,7 @@ def scale_worker():
     submit_job()
 
 
-def main():
+def qos_guarantee(qos_time):
     """According to the log of the pod, predict the completion time of 
     the job, compare it with qos, and scale the number of pods horizontally."""
     namespace = "distributed-lstm"
@@ -85,7 +84,3 @@ def main():
             scale_worker()
     print("Scale Done! Wait Job Finish!")
     pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
-
-
-if __name__ == "__main__":
-    main()
