@@ -13,6 +13,8 @@ qos_time = 6000 # the qos is 2000 seconds
 min_predict_step = 200 # predict after completing min_predict_step mini batches.
 worker_number = 1
 scale_time = 0
+scale_delay = 10 # traning begins after 10s when submit job.
+load_data_delay = 2 # take 2 seconds to load traning data to memory
 
 # Create k8s API instance
 config.load_kube_config()
@@ -63,16 +65,17 @@ def main():
                 global_step = pod_function.read_global_step(api_instance, namespace, pod_name)
                 print(global_step)
                 if global_step != -1 and global_step >= min_predict_step:
-                    used_time = time.time() - scale_time
+                    used_time = time.time() - scale_time - scale_delay - load_data_delay
                     break
             except:
                 # Cannot read global step when init.
                 pass
             time.sleep(1)
         # Predict job completion time.
-        forecast_complete_time = scale_time + (used_time/global_step)*total_steps
+        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step)*total_steps
         print("Prediction completion time: " + str(forecast_complete_time))
         print("QoS time: " + str(job_submit_time + qos_time))
+        print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
         if forecast_complete_time <= job_submit_time + qos_time:
             forecast_reach_qos = True
         else:
@@ -80,6 +83,7 @@ def main():
             delete_job()
             # Scale the workers
             scale_worker()
+    print("Scale Done! Wait Job Finish!")
     pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
 
 
