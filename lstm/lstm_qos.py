@@ -71,7 +71,7 @@ def qos_guarantee(qos_time):
                 pass
             time.sleep(0.5)
         # Predict job completion time.
-        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/2)*total_steps
+        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/1.5)*total_steps
         print("Prediction completion time: " + str(forecast_complete_time))
         print("QoS time: " + str(job_submit_time + qos_time))
         print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))

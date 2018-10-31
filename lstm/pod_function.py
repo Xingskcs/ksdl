@@ -33,11 +33,16 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
     :pod_name: the name of pod.
     :job_submit_time: the submit time of job.
     """
+    finish = False
     while True:
+        if finish:
+            break
         try: 
-            api_response = api_instance.read_namespaced_pod_status(pod_name, namespace)
-            if api_response.status.phase == "Succeeded":
-                break
+            for i in range(32):
+                api_response = api_instance.read_namespaced_pod_status("lstm-worker-{index}".format(index=i), namespace)
+                if api_response.status.phase == "Succeeded":
+                    finish = True
+                    break
         except:
             pass
     print("Job Completed. Total time(seconds): " + str(time.time() - job_submit_time))
