@@ -31,7 +31,7 @@ def submit_job():
 
 def delete_job():
     """Delete job."""
-    os.system("python render_template.py distributed-gan.jinja | kubectl delete -f - -n distributed-gan")
+    os.system("python render_template.py distributed-gan.jinja | kubectl delete -f - -n distributed-gan --grace-period=0 --force")
 
 
 def scale_worker():
