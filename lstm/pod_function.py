@@ -47,3 +47,27 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
         except:
             pass
     print("Job Completed. Total time(seconds): " + str(time.time() - job_submit_time))
+
+
+def get_cpu_memory_usage(api_instance, namespace):
+    """Get cpus and memory used in a namespace. 
+
+    :return: (int, float, float)
+                 the pod number.
+                 the cpus used, the unit is m.
+                 the mem used, the unit is G.
+    """
+    name = namespace.split('-')[1]
+    label_selector = 'name='+name
+    try: 
+        api_response = api_instance.list_pod_for_all_namespaces(label_selector=label_selector)
+        pod_number = len(api_response.items)
+        cpus_sum = 0
+        mem_sum = 0
+        for i in range(pod_number):
+            cpus_sum += float(api_response.items[i].spec.containers[0].resources.limits['cpu'])
+            mem_str = api_response.items[i].spec.containers[0].resources.limits['memory']
+            mem_sum += float(mem_str[:mem_str.find('G')])
+        return (pod_number, cpus_sum, mem_sum)
+    except ApiException as e:
+        print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)

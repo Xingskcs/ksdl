@@ -1,26 +1,15 @@
 import os
 import time
 
-import kubernetes
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-
 import pod_function
 
 # Global variables
-total_steps = 100000 # the number of training steps
+total_steps = 10000 # the number of training steps
 min_predict_step = 200 # predict after completing min_predict_step mini batches.
 worker_number = 1
 scale_time = 0
 scale_delay = 10 # traning begins after 10s when submit job.
 load_data_delay = 2 # take 2 seconds to load traning data to memory
-
-# Create k8s API instance
-config.load_kube_config()
-configuration = kubernetes.client.Configuration()
-configuration.api_key['authorization'] = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWNydnM5Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJhZDlhZjRmYy1kYjg2LTExZTgtYTYxYS0wMDBhZjc5YmZmOTAiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.MJFsXqqXQqFvFBMYsoOv75CnbFDql4IA_trWPN87Qci9Kjv1Nksn6F1Upryp9jTd3NmUBWAewnCPxHt2mkahWsMdAlbn1_KxtPPng21SxP41DwSYN46J-zlU4CKtquDVjQ6EYVPqNc_mRSgAg6D63BXg6yB18MaM5zMI9DJHzngko0qJh3UIOmGy6MsEYTgO4eoHX1r_fI0CommWDCKfjITQEqWxjn1ezHgsqFn0NsN13s2Y3PR3PYn_-SMTVFy6C_ShONM3NEAysxVAc32Q8WTYektVe5Pq_le0utoBQkSzXfBrN7CjyHNShy1siqI6SyKuJVb6vouHVT8wbaBbQw'
-configuration.api_key_prefix['authorization'] = 'Bearer'
-api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(configuration))
 
 
 def submit_job():
@@ -45,7 +34,7 @@ def scale_worker():
     submit_job()
 
 
-def qos_guarantee(qos_time):
+def qos_guarantee(api_instance, qos_time):
     """According to the log of the pod, predict the completion time of 
     the job, compare it with qos, and scale the number of pods horizontally."""
     global worker_number
@@ -64,7 +53,6 @@ def qos_guarantee(qos_time):
         while True:
             try:
                 global_step = pod_function.read_global_step(api_instance, namespace, pod_name)
-                print(global_step)
                 if global_step != -1 and global_step >= min_predict_step:
                     used_time = time.time() - scale_time - scale_delay - load_data_delay
                     break
@@ -73,7 +61,7 @@ def qos_guarantee(qos_time):
                 pass
             time.sleep(0.5)
         # Predict job completion time.
-        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/1.5)*total_steps
+        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/1.2)*total_steps
         print("Prediction completion time: " + str(forecast_complete_time))
         print("QoS time: " + str(job_submit_time + qos_time))
         print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
