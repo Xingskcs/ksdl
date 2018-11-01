@@ -48,6 +48,8 @@ def scale_worker():
 def qos_guarantee(qos_time):
     """According to the log of the pod, predict the completion time of 
     the job, compare it with qos, and scale the number of pods horizontally."""
+    global worker_number
+    worker_number = 1
     namespace = "distributed-lstm"
     pod_name = "lstm-worker-0"
     forecast_reach_qos = False

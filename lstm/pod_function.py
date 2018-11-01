@@ -43,6 +43,7 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
                 if api_response.status.phase == "Succeeded":
                     finish = True
                     break
+                time.sleep(1)
         except:
             pass
     print("Job Completed. Total time(seconds): " + str(time.time() - job_submit_time))
