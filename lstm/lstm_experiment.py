@@ -17,7 +17,7 @@ api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(configura
 
 namespace = "distributed-lstm"
 
-qos_test_list = [600 + 10*i for i in range(121)]
+qos_test_list = [600 + 40*i for i in range(31)]
 success = 0
 failure = 0
 cpus_sum = 0
@@ -28,10 +28,10 @@ for qos_time in qos_test_list:
     os.system("rm distributed-lstm.jinja")
     os.system("cp ../distributed-lstm.jinja ./")
     start_time = time.time()
-    lstm_qos.qos_guarantee(api_instance, qos_time)
+    pod_resource_usage = lstm_qos.qos_guarantee(api_instance, qos_time)
     end_time = time.time()
-    # Resource utilization
-    pods_cpus_mem_used = pod_function.get_cpu_memory_usage(api_instance, namespace)
+    # Resource allocation
+    pods_cpus_mem_used = pod_function.get_cpu_memory_allocation(api_instance, namespace)
     cpus_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[1]
     mem_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[2]
     # Delete job
@@ -44,7 +44,8 @@ for qos_time in qos_test_list:
         failure += 1
     with open("exp_result.csv", 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, dialect='excel')
-        writer.writerow([qos_time, end_time - start_time, pods_cpus_mem_used[0], pods_cpus_mem_used[1], pods_cpus_mem_used[2]])
+        writer.writerow([qos_time, end_time - start_time, pods_cpus_mem_used[0], pods_cpus_mem_used[1], pods_cpus_mem_used[2],
+                        pod_resource_usage[0], pod_resource_usage[1], pod_resource_usage[2], pod_resource_usage[3]])
     time.sleep(30)
 with open("exp_result.csv", 'a', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='excel')

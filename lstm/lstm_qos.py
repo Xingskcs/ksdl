@@ -73,4 +73,4 @@ def qos_guarantee(api_instance, qos_time):
             # Scale the workers
             scale_worker()
     print("Scale Done! Wait Job Finish!")
-    pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
+    return pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
