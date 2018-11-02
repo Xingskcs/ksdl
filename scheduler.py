@@ -8,7 +8,7 @@ from sdcclient import SdcClient
 config.load_kube_config()
 v1 = client.CoreV1Api()
 sdclient = SdcClient("2b9e3c0a-cee6-443a-90b5-7530682b4d71")
-sysdig_metric = "net.http.request.time"
+sysdig_metric = "cpu.used.percent"
 metrics = [{ "id": sysdig_metric, "aggregations": { "time": "timeAvg", "group": "avg" } }]
 
 scheduler_name = "sysdigsched"
