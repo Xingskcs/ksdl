@@ -10,6 +10,7 @@ worker_number = 1
 scale_time = 0
 scale_delay = 10 # traning begins after 10s when submit job.
 load_data_delay = 2 # take 2 seconds to load traning data to memory
+max_worker_number = 32
 
 
 def submit_job():
@@ -65,7 +66,7 @@ def qos_guarantee(api_instance, qos_time):
         print("Prediction completion time: " + str(forecast_complete_time))
         print("QoS time: " + str(job_submit_time + qos_time))
         print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
-        if forecast_complete_time <= job_submit_time + qos_time:
+        if forecast_complete_time <= job_submit_time + qos_time or worker_number >= max_worker_number:
             forecast_reach_qos = True
         else:
             # Delete previous job

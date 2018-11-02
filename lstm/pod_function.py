@@ -45,9 +45,7 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
     worker_cpu_max = 0
     worker_mem_max = 0
     finish = False
-    while True:
-        if finish:
-            break
+    while not finish:
         try: 
             ps_cpu_mem_usage = get_pod_cpu_memory_usage("lstm-ps-0")
             worker_cpu_mem_usage = get_pod_cpu_memory_usage("lstm-worker-0")
