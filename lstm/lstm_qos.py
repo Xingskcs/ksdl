@@ -23,7 +23,7 @@ def submit_job():
 
 def delete_job():
     """Delete job."""
-    os.system("python render_template.py distributed-lstm.jinja | kubectl delete -f - -n distributed-lstm")
+    os.system("python render_template.py distributed-lstm.jinja | kubectl delete -f - -n distributed-lstm --grace-period=0 --force")
 
 
 def scale_worker():
@@ -43,25 +43,28 @@ def scale_ps_or_worker():
                  "ps"
                  "worker"
     """
-    ps_cpu_mem_usage = pod_function.get_pod_cpu_memory_usage("lstm-ps-0")
-    ps_cpu_mem_limit = pod_function.get_pod_cpu_memory_limits("lstm-ps-0")
-    pod_resource_threshold = 0.95
-    if ps_cpu_mem_usage[0]/ps_cpu_mem_limit[0] > pod_resource_threshold or ps_cpu_mem_usage[1]/ps_cpu_mem_limit[1] > pod_resource_threshold:
-        # Delete job
-        delete_job()
-        print ("ps")
-        return "ps"
-    else:
-        # Delete job
-        delete_job()
-        print ("worker")
-        return "worker"
+    delete_job()
+    print ("worker")
+    return "worker"
+    # ps_cpu_mem_usage = pod_function.get_pod_cpu_memory_usage("lstm-ps-0")
+    # ps_cpu_mem_limit = pod_function.get_pod_cpu_memory_limits("lstm-ps-0")
+    # pod_resource_threshold = 0.95
+    # if ps_cpu_mem_usage[0]/ps_cpu_mem_limit[0] > pod_resource_threshold or ps_cpu_mem_usage[1]/ps_cpu_mem_limit[1] > pod_resource_threshold:
+    #     # Delete job
+    #     delete_job()
+    #     print ("ps")
+    #     return "ps"
+    # else:
+    #     # Delete job
+    #     delete_job()
+    #     print ("worker")
+    #     return "worker"
 
 
 def scale_workerII(predict_training_time, job_submit_time, qos_time):
     """Scale workers smartly."""
     # Judge scale ps or worker.
-    if scale_ps_or_worker == "ps":
+    if scale_ps_or_worker() == "ps":
         pass
     else:
         # Compute worker number
