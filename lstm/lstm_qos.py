@@ -23,7 +23,7 @@ def submit_job():
 
 def delete_job():
     """Delete job."""
-    os.system("python render_template.py distributed-lstm.jinja | kubectl delete -f - -n distributed-lstm --grace-period=0 --force")
+    os.system("python render_template.py distributed-lstm.jinja | kubectl delete -f - -n distributed-lstm")
 
 
 def scale_worker():
@@ -49,10 +49,12 @@ def scale_ps_or_worker():
     if ps_cpu_mem_usage[0]/ps_cpu_mem_limit[0] > pod_resource_threshold or ps_cpu_mem_usage[1]/ps_cpu_mem_limit[1] > pod_resource_threshold:
         # Delete job
         delete_job()
+        print ("ps")
         return "ps"
     else:
         # Delete job
         delete_job()
+        print ("worker")
         return "worker"
 
 
@@ -64,7 +66,8 @@ def scale_workerII(predict_training_time, job_submit_time, qos_time):
     else:
         # Compute worker number
         global worker_number
-        scale_worker_number = math.ceil((worker_number*predict_training_time)/(job_submit_time+qos_time-scale_time-scale_delay-load_data_delay))
+        predict_scale_time = time.time()
+        scale_worker_number = math.ceil((worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
         change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
                             number1=worker_number, number2=scale_worker_number)
         worker_number = scale_worker_number
