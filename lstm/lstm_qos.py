@@ -30,7 +30,7 @@ def scale_worker():
     """Scale workers."""
     global worker_number
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
-        number1=worker_number, number2=worker_number*2)
+                        number1=worker_number, number2=worker_number*2)
     worker_number = worker_number*2
     os.system(change_worker_cmd)
     submit_job()
@@ -66,7 +66,7 @@ def scale_workerII(predict_training_time, job_submit_time, qos_time):
         global worker_number
         scale_worker_number = math.ceil((worker_number*predict_training_time)/(job_submit_time+qos_time-scale_time-scale_delay-load_data_delay))
         change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
-        number1=worker_number, number2=scale_worker_number)
+                            number1=worker_number, number2=scale_worker_number)
         worker_number = scale_worker_number
         os.system(change_worker_cmd)
         submit_job()
