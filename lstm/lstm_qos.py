@@ -1,5 +1,6 @@
 import os
 import time
+import math
 
 import pod_function
 
@@ -33,6 +34,42 @@ def scale_worker():
     worker_number = worker_number*2
     os.system(change_worker_cmd)
     submit_job()
+
+
+def scale_ps_or_worker():
+    """Judge scale ps or worker.
+
+    :return: string
+                 "ps"
+                 "worker"
+    """
+    ps_cpu_mem_usage = pod_function.get_pod_cpu_memory_usage("lstm-ps-0")
+    ps_cpu_mem_limit = pod_function.get_pod_cpu_memory_limits("lstm-ps-0")
+    pod_resource_threshold = 0.95
+    if ps_cpu_mem_usage[0]/ps_cpu_mem_limit[0] > pod_resource_threshold or ps_cpu_mem_usage[1]/ps_cpu_mem_limit[1] > pod_resource_threshold:
+        # Delete job
+        delete_job()
+        return "ps"
+    else:
+        # Delete job
+        delete_job()
+        return "worker"
+
+
+def scale_workerII(predict_training_time, job_submit_time, qos_time):
+    """Scale workers smartly."""
+    # Judge scale ps or worker.
+    if scale_ps_or_worker == "ps":
+        pass
+    else:
+        # Compute worker number
+        global worker_number
+        scale_worker_number = math.ceil((worker_number*predict_training_time)/(job_submit_time+qos_time-scale_time-scale_delay-load_data_delay))
+        change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-lstm.jinja".format(
+        number1=worker_number, number2=scale_worker_number)
+        worker_number = scale_worker_number
+        os.system(change_worker_cmd)
+        submit_job()
 
 
 def qos_guarantee(api_instance, qos_time):
@@ -69,9 +106,7 @@ def qos_guarantee(api_instance, qos_time):
         if forecast_complete_time <= job_submit_time + qos_time or worker_number >= max_worker_number:
             forecast_reach_qos = True
         else:
-            # Delete previous job
-            delete_job()
             # Scale the workers
-            scale_worker()
+            scale_workerII((used_time/global_step/1.2)*total_steps, job_submit_time, qos_time)
     print("Scale Done! Wait Job Finish!")
     return pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
