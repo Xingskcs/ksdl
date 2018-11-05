@@ -87,7 +87,10 @@ def get_cpu_memory_allocation(api_instance, namespace):
         for i in range(pod_number):
             cpus_sum += float(api_response.items[i].spec.containers[0].resources.limits['cpu'])
             mem_str = api_response.items[i].spec.containers[0].resources.limits['memory']
-            mem_sum += float(mem_str[:mem_str.find('G')])
+            if mem_str.find('G') == -1:
+                mem_sum += float(mem_str[:mem_str.find('M')])/1024
+            else:
+                mem_sum += float(mem_str[:mem_str.find('G')])
         return (pod_number, cpus_sum, mem_sum)
     except ApiException as e:
         print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)

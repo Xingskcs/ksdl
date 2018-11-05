@@ -50,7 +50,7 @@ metadata:
         job: {{ job }}
         task: "{{ i }}"
 spec:
-  restartPolicy: OnFailure
+  restartPolicy: Never
   containers:
   - name: tensorflow
     image: {{ image }}
@@ -102,7 +102,7 @@ metadata:
         job: {{ job }}
         task: "{{ i }}"
 spec:
-  restartPolicy: OnFailure
+  restartPolicy: Never
   containers:
   - name: tensorflow
     image: {{ image }}
@@ -111,10 +111,10 @@ spec:
     - containerPort: {{ port }}
     resources:
       requests:
-        memory: "1024Mi"
+        memory: "900Mi"
         cpu: "2000m"
       limits:
-        memory: "1024Mi"
+        memory: "900Mi"
         cpu: "2000m"
     command:
     - "/usr/bin/python"

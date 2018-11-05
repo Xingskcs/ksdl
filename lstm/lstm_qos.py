@@ -68,17 +68,17 @@ def scale_workerII(predict_training_time, job_submit_time, qos_time):
         pass
     else:
         # Modify memory limit
-        worker_cpu_mem_usage = pod_function.get_pod_cpu_memory_usage("lstm-worker-0")
-        worker_cpu_mem_limit = pod_function.get_pod_cpu_memory_limits("lstm-worker-0")
-        if worker_cpu_mem_usage[1] + 100 < worker_cpu_mem_limit[1]:
-            rm_mem_request = "sed -i '114d' distributed-lstm.jinja"
-            os.system(rm_mem_request)
-            modify_mem_request = """sed -i '113a \        memory: "{memory}Mi"' distributed-lstm.jinja""".format(memory=worker_cpu_mem_usage[1] + 100)
-            os.system(modify_mem_request)
-            rm_mem_limit = "sed -i '117d' distributed-lstm.jinja"
-            os.system(rm_mem_limit)
-            modify_mem_limit = """sed -i '116a \        memory: "{memory}Mi"' distributed-lstm.jinja""".format(memory=worker_cpu_mem_usage[1] + 100)
-            os.system(modify_mem_limit)
+        # worker_cpu_mem_usage = pod_function.get_pod_cpu_memory_usage("lstm-worker-0")
+        # worker_cpu_mem_limit = pod_function.get_pod_cpu_memory_limits("lstm-worker-0")
+        # if worker_cpu_mem_usage[1] + 100 < worker_cpu_mem_limit[1]:
+        #     rm_mem_request = "sed -i '114d' distributed-lstm.jinja"
+        #     os.system(rm_mem_request)
+        #     modify_mem_request = """sed -i '113a \        memory: "{memory}Mi"' distributed-lstm.jinja""".format(memory=worker_cpu_mem_usage[1] + 100)
+        #     os.system(modify_mem_request)
+        #     rm_mem_limit = "sed -i '117d' distributed-lstm.jinja"
+        #     os.system(rm_mem_limit)
+        #     modify_mem_limit = """sed -i '116a \        memory: "{memory}Mi"' distributed-lstm.jinja""".format(memory=worker_cpu_mem_usage[1] + 100)
+        #     os.system(modify_mem_limit)
         # Delete job
         delete_job()
         # Compute worker number
