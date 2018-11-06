@@ -136,4 +136,3 @@ def get_pod_cpu_memory_limits(pod_name):
     mem_limit_data = sdclient.get_data(mem_limit_metrics, start, end, sampling, filter=pod_filter)
     mem_limit = float(mem_limit_data[1].get('data')[0].get('d')[0])/1024/1024
     return (cpus_limit, mem_limit)
-

@@ -87,7 +87,10 @@ def get_cpu_memory_allocation(api_instance, namespace):
         for i in range(pod_number):
             cpus_sum += float(api_response.items[i].spec.containers[0].resources.limits['cpu'])
             mem_str = api_response.items[i].spec.containers[0].resources.limits['memory']
-            mem_sum += float(mem_str[:mem_str.find('G')])
+            if mem_str.find('G') == -1:
+                mem_sum += float(mem_str[:mem_str.find('M')])/1024
+            else:
+                mem_sum += float(mem_str[:mem_str.find('G')])
         return (pod_number, cpus_sum, mem_sum)
     except ApiException as e:
         print("Exception when calling CoreV1Api->list_pod_for_all_namespaces: %s\n" % e)
@@ -112,3 +115,24 @@ def get_pod_cpu_memory_usage(pod_name):
     mem_metrics_data = sdclient.get_data(mem_metrics, start, end, sampling, filter=pod_filter)
     mem = float(mem_metrics_data[1].get('data')[0].get('d')[0])/1024/1024
     return (cpus, mem)
+
+
+def get_pod_cpu_memory_limits(pod_name):
+    """Get cpus and memory limits of a pod. 
+
+    :return: (float, float)
+                 the cores used.
+                 the mem used, the unit is M.
+    """
+    sdclient = SdcClient("2b9e3c0a-cee6-443a-90b5-7530682b4d71")
+    pod_filter = "kubernetes.pod.name = '%s'" % pod_name
+    start = -60
+    end = 0
+    sampling = 60
+    cpus_limit_metrics = [{"id": "kubernetes.pod.resourceLimits.cpuCores", "aggregations": { "time": "timeAvg", "group": "max" }}]
+    cpus_limit_data = sdclient.get_data(cpus_limit_metrics, start, end, sampling, filter=pod_filter)
+    cpus_limit = float(cpus_limit_data[1].get('data')[0].get('d')[0])
+    mem_limit_metrics = [{"id": "kubernetes.pod.resourceLimits.memBytes", "aggregations": { "time": "timeAvg", "group": "max" }}]
+    mem_limit_data = sdclient.get_data(mem_limit_metrics, start, end, sampling, filter=pod_filter)
+    mem_limit = float(mem_limit_data[1].get('data')[0].get('d')[0])/1024/1024
+    return (cpus_limit, mem_limit)

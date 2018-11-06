@@ -1,11 +1,12 @@
 import os
 import time
+import math
 
 import pod_function
 
 # Global variables
 total_steps = 100000
-min_predict_step = 200
+min_predict_step = 500
 worker_number = 1
 scale_time = 0
 scale_delay = 8 # training begins after 8s when submit job.

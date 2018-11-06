@@ -42,11 +42,11 @@ for qos_time in qos_test_list:
     else:
         print("failure")
         failure += 1
-    with open("exp_result.csv", 'a', newline='') as csvfile:
+    with open("exp_result_gan.csv", 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, dialect='excel')
         writer.writerow([qos_time, end_time - start_time, pods_cpus_mem_used[0], pods_cpus_mem_used[1], pods_cpus_mem_used[2],
                         pod_resource_usage[0], pod_resource_usage[1], pod_resource_usage[2], pod_resource_usage[3]])
     time.sleep(30)
-with open("exp_result.csv", 'a', newline='') as csvfile:
+with open("exp_result_gan.csv", 'a', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='excel')
     writer.writerow([cpus_sum, mem_sum, success/(success + failure)])
