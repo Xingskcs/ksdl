@@ -31,7 +31,7 @@ for qos_time in qos_test_list:
     pod_resource_usage = gan_qos.qos_guarantee(api_instance, namespace)
     end_time = time.time()
     # Resource allocation
-    pods_cpus_mem_used = pod_function.get_cpu_memory_allocation(api_instance, namespace)
+    pods_cpus_mem_used = pod_function.get_cpu_memory_allocation(api_instance, qos_time)
     cpus_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[1]
     mem_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[2]
     # Delete job
