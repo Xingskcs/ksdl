@@ -63,14 +63,15 @@ def scale_ps_vertically(new_ps_cpu):
         os.system(modify_cpu_limit)
           
 
-def scale_ps_workerII(predict_training_time, job_submit_time, qos_time):
+def scale_ps_workerII(job_submit_time, qos_time):
     """Scale ps or worker smartly."""
     delete_job()
     global worker_number
     predict_scale_time = time.time()
     # Reduce threshold
-    reduce_threshold = 1
-    scale_worker_number = math.ceil((reduce_threshold*worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
+    # reduce_threshold = 1
+    # scale_worker_number = math.ceil((reduce_threshold*worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
+    scale_worker_number = math.ceil((5000)/(job_submit_time+qos_time-predict_scale_time))
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-gan.jinja".format(
                         number1=worker_number, number2=scale_worker_number)
     worker_number = scale_worker_number
@@ -91,6 +92,8 @@ def qos_guarantee(api_instance, qos_time):
     the job, compare it with qos, and scale the number of pods horizontally."""
     global worker_number
     worker_number = 1
+    global ps_cpu
+    ps_cpu = 2000
     namespace = "distributed-gan"
     pod_name = "gan-worker-0"
     forecast_reach_qos = False
@@ -99,21 +102,8 @@ def qos_guarantee(api_instance, qos_time):
     # Record the submit time
     job_submit_time = time.time()
     while not forecast_reach_qos:
-        # Read global step
-        global_step = 0
-        used_time = 0
-        while True:
-            try:
-                global_step = pod_function.read_global_step(api_instance, namespace, pod_name)
-                if global_step != -1 and global_step >= min_predict_step:
-                    used_time = time.time() - scale_time - scale_delay - load_data_delay
-                    break
-            except:
-                # Cannot read global step when init.
-                pass
-            time.sleep(0.5)
         # Predict job completion time.
-        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/1)*total_steps
+        forecast_complete_time = scale_time + 5000/worker_number
         print("Prediction completion time: " + str(forecast_complete_time))
         print("QoS time: " + str(job_submit_time + qos_time))
         print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
@@ -121,6 +111,6 @@ def qos_guarantee(api_instance, qos_time):
             forecast_reach_qos = True
         else:
             # Scale the workers
-            scale_ps_workerII((used_time/global_step/1)*total_steps, job_submit_time, qos_time)
+            scale_ps_workerII(job_submit_time, qos_time)
     print("Scale Done! Wait Job Finish!")
     return pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
