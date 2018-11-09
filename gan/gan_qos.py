@@ -77,11 +77,17 @@ def scale_ps_workerII(job_submit_time, qos_time):
     worker_number = scale_worker_number
     os.system(change_worker_cmd)
     # Change ps resources
-    if worker_number > 4 and worker_number <= 8:
+    # if worker_number > 4 and worker_number <= 8:
+    #     scale_ps_vertically(4000)
+    # elif worker_number > 8 and worker_number <= 14:
+    #     scale_ps_vertically(6000)
+    # elif worker_number > 14:
+    #     scale_ps_vertically(8000)
+    if worker_number > 4 and worker_number <= 7:
         scale_ps_vertically(4000)
-    elif worker_number > 8 and worker_number <= 14:
+    elif worker_number > 7 and worker_number <= 10:
         scale_ps_vertically(6000)
-    elif worker_number > 14:
+    elif worker_number > 10:
         scale_ps_vertically(8000)
     submit_job()
 
