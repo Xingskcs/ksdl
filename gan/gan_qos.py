@@ -67,11 +67,22 @@ def scale_ps_workerII(job_submit_time, qos_time):
     """Scale ps or worker smartly."""
     delete_job()
     global worker_number
-    predict_scale_time = time.time()
+    # predict_scale_time = time.time()
     # Reduce threshold
     # reduce_threshold = 1
     # scale_worker_number = math.ceil((reduce_threshold*worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
-    scale_worker_number = math.ceil((5000)/(job_submit_time+qos_time-predict_scale_time))
+    # scale_worker_number = math.ceil((5000)/(job_submit_time+qos_time-predict_scale_time))
+    if qos_time <= 680:
+        scale_worker_number = 7
+    elif qos_time <= 840:
+        scale_worker_number = 6
+    elif qos_time <= 1040:
+        scale_worker_number = 5
+    elif qos_time <= 1320:
+        scale_worker_number = 4
+    else:
+        scale_worker_number = 3
+
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-gan.jinja".format(
                         number1=worker_number, number2=scale_worker_number)
     worker_number = scale_worker_number
@@ -108,15 +119,8 @@ def qos_guarantee(api_instance, qos_time):
     # Record the submit time
     job_submit_time = time.time()
     while not forecast_reach_qos:
-        # Predict job completion time.
-        forecast_complete_time = scale_time + 5000/worker_number
-        print("Prediction completion time: " + str(forecast_complete_time))
-        print("QoS time: " + str(job_submit_time + qos_time))
-        print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
-        if forecast_complete_time <= job_submit_time + qos_time or worker_number >= max_worker_number:
-            forecast_reach_qos = True
-        else:
-            # Scale the workers
-            scale_ps_workerII(job_submit_time, qos_time)
+        # Scale the workers
+        scale_ps_workerII(job_submit_time, qos_time)
+        forecast_reach_qos = True
     print("Scale Done! Wait Job Finish!")
     return pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
