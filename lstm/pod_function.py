@@ -103,15 +103,15 @@ def get_pod_cpu_memory_usage(pod_name):
                  the cores used.
                  the mem used, the unit is M.
     """
-    sdclient = SdcClient("2b9e3c0a-cee6-443a-90b5-7530682b4d71")
+    sdclient = SdcClient("5e7d3f61-e1fe-4467-928e-15cec005b79c")
     pod_filter = "kubernetes.pod.name = '%s'" % pod_name
     start = -60
     end = 0
     sampling = 60
-    cpus_metrics = [{ "id": "cpu.cores.used", "aggregations": { "time": "timeAvg", "group": "max" } }]
+    cpus_metrics = [{ "id": "cpu.cores.used", "aggregations": { "time": "max", "group": "max" } }]
     cpus_metric_data = sdclient.get_data(cpus_metrics, start, end, sampling, filter=pod_filter)
     cpus = float(cpus_metric_data[1].get('data')[0].get('d')[0])
-    mem_metrics = [{ "id": "memory.bytes.used", "aggregations": { "time": "timeAvg", "group": "max" } }]
+    mem_metrics = [{ "id": "memory.bytes.used", "aggregations": { "time": "max", "group": "max" } }]
     mem_metrics_data = sdclient.get_data(mem_metrics, start, end, sampling, filter=pod_filter)
     mem = float(mem_metrics_data[1].get('data')[0].get('d')[0])/1024/1024
     return (cpus, mem)
@@ -124,7 +124,7 @@ def get_pod_cpu_memory_limits(pod_name):
                  the cores used.
                  the mem used, the unit is M.
     """
-    sdclient = SdcClient("2b9e3c0a-cee6-443a-90b5-7530682b4d71")
+    sdclient = SdcClient("5e7d3f61-e1fe-4467-928e-15cec005b79c")
     pod_filter = "kubernetes.pod.name = '%s'" % pod_name
     start = -60
     end = 0

@@ -21,7 +21,7 @@ def read_global_step(api_instance, namespace, pod_name):
         # Return traning global step
         if api_response.find('Global step') == -1:
             return -1
-        return int(api_response.split(" ")[2])
+        return int(api_response.split(' ')[2])
     except:
         pass
 
@@ -46,9 +46,9 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
     worker_mem_max = 0
     finish = False
     while not finish:
-        try:
-            ps_cpu_mem_usage = get_pod_cpu_memory_usage("gan-ps-0")
-            worker_cpu_mem_usage = get_pod_cpu_memory_usage("gan-worker-0")
+        try: 
+            ps_cpu_mem_usage = get_pod_cpu_memory_usage("encoder-ps-0")
+            worker_cpu_mem_usage = get_pod_cpu_memory_usage("encoder-worker-0")
             if ps_cpu_mem_usage[0] > ps_cpu_max:
                 ps_cpu_max = ps_cpu_mem_usage[0]
             if ps_cpu_mem_usage[1] > ps_mem_max:
@@ -58,7 +58,7 @@ def wait_job_finish(api_instance, namespace, pod_name, job_submit_time):
             if worker_cpu_mem_usage[1] > worker_mem_max:
                 worker_mem_max = worker_cpu_mem_usage[1]
             for i in range(32):
-                api_response = api_instance.read_namespaced_pod_status("gan-worker-{index}".format(index=i), namespace)
+                api_response = api_instance.read_namespaced_pod_status("encoder-worker-{index}".format(index=i), namespace)
                 if api_response.status.phase == "Succeeded":
                     finish = True
                     break
@@ -79,7 +79,7 @@ def get_cpu_memory_allocation(api_instance, namespace):
     """
     name = namespace.split('-')[1]
     label_selector = 'name='+name
-    try:
+    try: 
         api_response = api_instance.list_pod_for_all_namespaces(label_selector=label_selector)
         pod_number = len(api_response.items)
         cpus_sum = 0

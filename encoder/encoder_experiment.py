@@ -5,7 +5,7 @@ import time
 import kubernetes
 from kubernetes import client, config
 
-import gan_qos
+import encoder_qos
 import pod_function
 
 # Create k8s API instance
@@ -15,7 +15,7 @@ configuration.api_key['authorization'] = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc
 configuration.api_key_prefix['authorization'] = 'Bearer'
 api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(configuration))
 
-namespace = "distributed-gan"
+namespace = "distributed-encoder"
 
 qos_test_list = [600 + 40*i for i in range(31)]
 success = 0
@@ -25,28 +25,28 @@ mem_sum = 0
 for qos_time in qos_test_list:
     print("qos time: " + str(qos_time))
     # Set the number of workers to 1
-    os.system("rm distributed-gan.jinja")
-    os.system("cp ../distributed-gan.jinja ./")
+    os.system("rm distributed-encoder.jinja")
+    os.system("cp ../distributed-encoder.jinja ./")
     start_time = time.time()
-    pod_resource_usage = gan_qos.qos_guarantee(api_instance, namespace)
+    pod_resource_usage = encoder_qos.qos_guarantee(api_instance, qos_time)
     end_time = time.time()
     # Resource allocation
-    pods_cpus_mem_used = pod_function.get_cpu_memory_allocation(api_instance, qos_time)
+    pods_cpus_mem_used = pod_function.get_cpu_memory_allocation(api_instance, namespace)
     cpus_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[1]
     mem_sum += ((end_time-start_time)/3600)*pods_cpus_mem_used[2]
     # Delete job
-    gan_qos.delete_job()
+    encoder_qos.delete_job()
     if end_time - start_time <= qos_time:
         print("success")
         success += 1
     else:
         print("failure")
         failure += 1
-    with open("exp_result_gan.csv", 'a', newline='') as csvfile:
+    with open("exp_result.csv", 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, dialect='excel')
         writer.writerow([qos_time, end_time - start_time, pods_cpus_mem_used[0], pods_cpus_mem_used[1], pods_cpus_mem_used[2],
                         pod_resource_usage[0], pod_resource_usage[1], pod_resource_usage[2], pod_resource_usage[3]])
     time.sleep(30)
-with open("exp_result_gan.csv", 'a', newline='') as csvfile:
+with open("exp_result.csv", 'a', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='excel')
     writer.writerow([cpus_sum, mem_sum, success/(success + failure)])
