@@ -25,7 +25,7 @@
   {%- endfor -%}
 {%- endmacro -%}
 
-{%- for job in ["worker", "ps"] -%}
+{%- for job in ["ps"] -%}
 {%- for i in range(replicas[job]) -%}
 kind: Service
 apiVersion: v1
@@ -77,4 +77,55 @@ spec:
 ---
 {% endfor %}
 {%- endfor -%}
+{%- for job in ["worker"] -%}
+{%- for i in range(replicas[job]) -%}
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ name }}-{{ job }}-{{ i }}
+spec:
+  selector:
+    name: {{ name }}
+    job: {{ job }}
+    task: "{{ i }}"
+  ports:
+  - port: {{ port }}
+    targetPort: {{ port }}
 
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: {{ name }}-{{ job }}-{{ i }}
+  labels:
+        name: {{ name }}
+        job: {{ job }}
+        task: "{{ i }}"
+spec:
+  restartPolicy: OnFailure
+  containers:
+  - name: tensorflow
+    image: {{ image }}
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: {{ port }}
+    resources:
+      requests:
+        memory: "1024Mi"
+        cpu: "2000m"
+      limits:
+        memory: "1024Mi"
+        cpu: "2000m"
+    command:
+    - "/usr/bin/python"
+    - "{{ script }}"
+    args:
+    - "--data_dir={{ data_dir }}"
+    - "--train_dir={{ train_dir }}"
+    - "--task_index={{ i }}"
+    - "--job_name={{ job }}"
+    - "--worker_hosts={{ worker_hosts() }}"
+    - "--ps_hosts={{ ps_hosts() }}"
+---
+{% endfor %}
+{%- endfor -%}
