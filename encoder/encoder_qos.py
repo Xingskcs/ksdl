@@ -11,7 +11,7 @@ worker_number = 1
 scale_time = 0
 scale_delay = 10 # traning begins after 10s when submit job.
 load_data_delay = 2 # take 2 seconds to load traning data to memory
-max_worker_number = 32
+max_worker_number = 16
 ps_cpu = 2000
 
 
@@ -59,6 +59,8 @@ def scale_workerII(predict_training_time, job_submit_time, qos_time):
     global worker_number
     predict_scale_time = time.time()
     scale_worker_number = math.ceil((worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
+    if scale_worker_number > max_worker_number:
+        scale_worker_number = max_worker_number
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-encoder.jinja".format(
                         number1=worker_number, number2=scale_worker_number)
     worker_number = scale_worker_number
