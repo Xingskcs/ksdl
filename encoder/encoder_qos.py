@@ -11,7 +11,7 @@ worker_number = 1
 scale_time = 0
 scale_delay = 10 # traning begins after 10s when submit job.
 load_data_delay = 2 # take 2 seconds to load traning data to memory
-max_worker_number = 16
+max_worker_number = 12
 ps_cpu = 2000
 
 
@@ -87,7 +87,7 @@ def qos_guarantee(api_instance, qos_time):
     job_submit_time = time.time()
     threshold = 1.1
     if qos_time < 1120:
-        threshold = 1.1
+        threshold = 1.2
     else:
         threshold = 1.8
     while not forecast_reach_qos:

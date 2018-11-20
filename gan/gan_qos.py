@@ -11,7 +11,7 @@ worker_number = 1
 scale_time = 0
 scale_delay = 8 # training begins after 8s when submit job.
 load_data_delay = 1.6 # take 1.6s to load training data to memory
-max_worker_number = 32
+max_worker_number = 9
 ps_cpu = 2000
 ps_number = 1
 
@@ -63,43 +63,46 @@ def scale_ps_vertically(new_ps_cpu):
         os.system(modify_cpu_limit)
           
 
-def scale_ps_workerII(job_submit_time, qos_time):
+def scale_ps_workerII(predict_training_time, job_submit_time, qos_time):
     """Scale ps or worker smartly."""
-    delete_job()
+    # delete_job()
     global worker_number
-    # predict_scale_time = time.time()
+    predict_scale_time = time.time()
     # Reduce threshold
-    # reduce_threshold = 1
-    # scale_worker_number = math.ceil((reduce_threshold*worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
+    reduce_threshold = 1
+    scale_worker_number = math.ceil((reduce_threshold*worker_number*predict_training_time)/(job_submit_time+qos_time-predict_scale_time-scale_delay-load_data_delay))
+    if scale_worker_number > max_worker_number:
+        scale_worker_number = max_worker_number
+
     # scale_worker_number = math.ceil((5000)/(job_submit_time+qos_time-predict_scale_time))
-    if qos_time <= 680:
-        scale_worker_number = 7
-    elif qos_time <= 840:
-        scale_worker_number = 6
-    elif qos_time <= 1040:
-        scale_worker_number = 5
-    elif qos_time <= 1320:
-        scale_worker_number = 4
-    else:
-        scale_worker_number = 3
+    # if qos_time <= 680:
+    #     scale_worker_number = 7
+    # elif qos_time <= 840:
+    #     scale_worker_number = 6
+    # elif qos_time <= 1040:
+    #     scale_worker_number = 5
+    # elif qos_time <= 1320:
+    #     scale_worker_number = 4
+    # else:
+    #     scale_worker_number = 3
 
     change_worker_cmd = "sed -i 's/{{%- set worker_replicas = {number1} -%}}/{{%- set worker_replicas = {number2} -%}}/g' distributed-gan.jinja".format(
                         number1=worker_number, number2=scale_worker_number)
     worker_number = scale_worker_number
     os.system(change_worker_cmd)
     # Change ps resources
-    # if worker_number > 4 and worker_number <= 8:
-    #     scale_ps_vertically(4000)
-    # elif worker_number > 8 and worker_number <= 14:
-    #     scale_ps_vertically(6000)
-    # elif worker_number > 14:
-    #     scale_ps_vertically(8000)
-    if worker_number > 4 and worker_number <= 7:
+    if worker_number > 4 and worker_number <= 8:
         scale_ps_vertically(4000)
-    elif worker_number > 7 and worker_number <= 10:
+    elif worker_number > 8 and worker_number <= 14:
         scale_ps_vertically(6000)
-    elif worker_number > 10:
+    elif worker_number > 14:
         scale_ps_vertically(8000)
+    # if worker_number > 4 and worker_number <= 7:
+    #     scale_ps_vertically(4000)
+    # elif worker_number > 7 and worker_number <= 10:
+    #     scale_ps_vertically(6000)
+    # elif worker_number > 10:
+    #     scale_ps_vertically(8000)
     submit_job()
 
 
@@ -118,9 +121,32 @@ def qos_guarantee(api_instance, qos_time):
     submit_job()
     # Record the submit time
     job_submit_time = time.time()
+    threshold = 2
     while not forecast_reach_qos:
-        # Scale the workers
-        scale_ps_workerII(job_submit_time, qos_time)
-        forecast_reach_qos = True
+        # Read global step
+        global_step = 0
+        used_time = 0
+        while True:
+            try:
+                global_step = pod_function.read_global_step(api_instance, namespace, pod_name)
+                if global_step != -1 and global_step >= min_predict_step:
+                    used_time = time.time() - scale_time - scale_delay - load_data_delay
+                    break
+            except:
+                # Cannot read global step when init.
+                pass
+            time.sleep(0.5)
+        # Predict job completion time.
+        forecast_complete_time = scale_time + scale_delay + load_data_delay + (used_time/global_step/threshold)*total_steps
+        print("Prediction completion time: " + str(forecast_complete_time))
+        print("QoS time: " + str(job_submit_time + qos_time))
+        print("Difference between prediction and qos: " + str(forecast_complete_time - job_submit_time - qos_time))
+        if forecast_complete_time <= job_submit_time + qos_time or worker_number >= max_worker_number:
+            forecast_reach_qos = True
+        else:
+            # Delete job
+            delete_job()
+            # Scale the workers
+            scale_ps_workerII((used_time/global_step/threshold)*total_steps, job_submit_time, qos_time)
     print("Scale Done! Wait Job Finish!")
     return pod_function.wait_job_finish(api_instance, namespace, pod_name, job_submit_time)
